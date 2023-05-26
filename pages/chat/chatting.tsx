@@ -6,7 +6,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import SendIcon from "@mui/icons-material/Send";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 
-const socket = io("http://localhost:3000");
+const socket = io("http://192.162.10.69:8080/ws");
 
 const theme = createTheme();
 
