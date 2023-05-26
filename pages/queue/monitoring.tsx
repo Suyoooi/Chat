@@ -166,9 +166,18 @@ const Mornitoring = ({ onClose }: { onClose: () => void }) => {
             <div key={index}>{message.body}</div>
           ))}
         </div>
-
-        <div style={{ marginTop: "16px" }}>
-          <Button
+        <form onSubmit={(event) => handleSubmit(event, "abc", "topic", 4)}>
+          <div style={{ marginTop: "16px" }}>
+            <input
+              type="text"
+              name="serialInput"
+              onChange={handleChange}
+              value={serial}
+            />
+            <button type="submit" value="의견 보내기">
+              제출
+            </button>
+            {/* <Button
             value={serial}
             variant="contained"
             // onClick={handleStart}
@@ -176,11 +185,12 @@ const Mornitoring = ({ onClose }: { onClose: () => void }) => {
             onSubmit={(event) => handleSubmit(event, "abc", "topic", 4)}
           >
             시작
-          </Button>
-          <Button variant="contained" onClick={handleStop}>
-            중지
-          </Button>
-        </div>
+          </Button> */}
+            <Button variant="contained" onClick={handleStop}>
+              중지
+            </Button>
+          </div>
+        </form>
       </ModalWrapper>
     </Modal>
   );
