@@ -2,15 +2,15 @@ import { useRef, useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import * as StompJs from "@stomp/stompjs";
 
-interface ChatMessage {
+interface serialMessage {
   body: string;
 }
 
 const Browser = () => {
-  const [chatList, setChatList] = useState<ChatMessage[]>([]);
-  const [chat, setChat] = useState("");
+  const [serialList, setSerialList] = useState<serialMessage[]>([]);
+  const [serial, setSerial] = useState("");
 
-  const { apply_id } = useParams<{ apply_id: string }>();
+  // const { topicName } = useParams<{ topicName: string }>();
   const client = useRef<StompJs.Client | null>(null);
 
   const connect = () => {
@@ -24,40 +24,45 @@ const Browser = () => {
     client.current.activate();
   };
 
-  const publish = (chat: string) => {
+  const publish = (serial: string, topicName: string, count: number) => {
     if (!client.current?.connected) return;
 
     client.current.publish({
       destination: "/pub/sendMessage",
+      body: JSON.stringify({
+        topicName: topicName,
+        serial: serial,
+        count: count,
+      }),
     });
-
-    setChat("");
+    setSerial("");
   };
 
   const subscribe = () => {
     client.current?.subscribe("/sub/1", (body) => {
       const json_body = JSON.parse(body.body);
       console.log(json_body);
-      // setChatList((_chat_list) => [
-      // ..._chat_list, json_body
-      // ]);
+      setSerialList((_serial_list) => [..._serial_list, json_body]);
     });
   };
 
   const disconnect = () => {
     client.current?.deactivate();
+    console.log("disconnected");
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // 채팅 입력 시 state에 값 설정
-    setChat(e.target.value);
+    setSerial(e.target.value);
   };
 
-  const handleSubmit = (e: React.FormEvent, chat: string) => {
-    // 보내기 버튼 눌렀을 때 publish
+  const handleSubmit = (
+    e: React.FormEvent,
+    serial: string,
+    topicName: string,
+    count: number
+  ) => {
     e.preventDefault();
-
-    publish(chat);
+    publish(topicName, serial, count);
   };
 
   useEffect(() => {
@@ -68,14 +73,18 @@ const Browser = () => {
 
   return (
     <div>
-      <div className="chat-list"></div>
-      <form onSubmit={(event) => handleSubmit(event, chat)}>
+      <div className="serial-list">
+        {serialList.map((message, index) => (
+          <div key={index}>{message.body}</div>
+        ))}
+      </div>
+      <form onSubmit={(event) => handleSubmit(event, "abc", "topic", 4)}>
         <div>
           <input
             type="text"
-            name="chatInput"
+            name="serialInput"
             onChange={handleChange}
-            value={chat}
+            value={serial}
           />
         </div>
         <input type="submit" value="의견 보내기" />
