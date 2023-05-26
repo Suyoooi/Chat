@@ -1,5 +1,12 @@
-import React, { useState } from "react";
+import React from "react";
 import { Button, Modal, TextField, Box, styled } from "@mui/material";
+import { useRef, useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
+import * as StompJs from "@stomp/stompjs";
+
+interface serialMessage {
+  body: string;
+}
 
 const ModalWrapper = styled("div")`
   position: absolute;
@@ -23,6 +30,68 @@ const Mornitoring = ({ onClose }: { onClose: () => void }) => {
   const [input3, setInput3] = useState("");
   const [input4, setInput4] = useState("");
   const [list, setList] = useState<string[]>([]);
+  const [serialList, setSerialList] = useState<serialMessage[]>([]);
+  const [serial, setSerial] = useState("");
+
+  const client = useRef<StompJs.Client | null>(null);
+
+  const connect = () => {
+    client.current = new StompJs.Client({
+      brokerURL: "ws://192.168.10.183:8080/ws",
+      onConnect: () => {
+        console.log("success");
+        subscribe();
+      },
+    });
+    client.current.activate();
+  };
+
+  const publish = (serial: string, topicName: string, count: number) => {
+    if (!client.current?.connected) return;
+
+    client.current.publish({
+      destination: "/pub/sendMessage",
+      body: JSON.stringify({
+        topicName: topicName,
+        serial: serial,
+        count: count,
+      }),
+    });
+    setSerial("");
+  };
+
+  const subscribe = () => {
+    client.current?.subscribe("/sub/", (body) => {
+      const json_body = JSON.parse(body.body);
+      console.log(json_body);
+      setSerialList((_serial_list) => [..._serial_list, json_body]);
+    });
+  };
+
+  const disconnect = () => {
+    client.current?.deactivate();
+    console.log("error");
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSerial(e.target.value);
+  };
+
+  const handleSubmit = (
+    e: React.FormEvent,
+    serial: string,
+    topicName: string,
+    count: number
+  ) => {
+    e.preventDefault();
+    publish(topicName, serial, count);
+  };
+
+  useEffect(() => {
+    connect();
+
+    return () => disconnect();
+  }, []);
 
   const handleClose = () => {
     setOpen(false);
@@ -31,6 +100,9 @@ const Mornitoring = ({ onClose }: { onClose: () => void }) => {
 
   const handleStart = () => {
     // 시작 버튼 동작 추가
+    const topicName = "topic";
+    const count = 4; // 예시로 input1 값을 사용
+    publish(serial, topicName, count);
   };
 
   const handleStop = () => {
@@ -89,12 +161,19 @@ const Mornitoring = ({ onClose }: { onClose: () => void }) => {
             <div key={index}>{item}</div>
           ))}
         </Box>
+        <div className="serial-list">
+          {serialList.map((message, index) => (
+            <div key={index}>{message.body}</div>
+          ))}
+        </div>
 
         <div style={{ marginTop: "16px" }}>
           <Button
+            value={serial}
             variant="contained"
-            onClick={handleStart}
+            // onClick={handleStart}
             sx={{ marginRight: "8px" }}
+            onSubmit={(event) => handleSubmit(event, "abc", "topic", 4)}
           >
             시작
           </Button>
