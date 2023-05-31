@@ -27,7 +27,6 @@ const Monitoring = () => {
   const [open, setOpen] = useState(true);
   const [topicName, setTopicName] = useState("");
   const [count, setCount] = useState("");
-  const [list, setList] = useState<string[]>([]);
   const [serialList, setSerialList] = useState<SerialMessage[]>([]);
   const [serial, setSerial] = useState("");
 
@@ -61,15 +60,18 @@ const Monitoring = () => {
     });
 
     setSerial("");
+    // subscribe();
   };
 
   const subscribe = () => {
-    console.log(uuid);
-    // const subscribeTopic = "/sub/" + serial;
-    // console.log(subscribeTopic);
-    client.current?.subscribe("/sub/" + uuid, (body) => {
+    // console.log(uuid);
+    console.log(topicName);
+    const subscribeTopic = "/sub/" + uuid;
+    console.log(subscribeTopic);
+    client.current?.subscribe(subscribeTopic, (body) => {
       console.log(body.body);
     });
+    console.log(subscribeTopic);
   };
 
   const disconnect = () => {

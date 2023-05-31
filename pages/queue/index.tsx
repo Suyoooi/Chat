@@ -10,12 +10,12 @@ const Home = () => {
 
   return (
     <>
-      <div className="flex items-center justify-center h-screen bg-red-200">
+      <div className="flex items-center justify-center h-screen bg-gray-300">
         <main
           className="max-w-lg p-4 bg-white rounded-lg cursor-pointer shadow-"
           onClick={handleQueueClick}
         >
-          <h1>Queue</h1>
+          <h1>Topic</h1>
         </main>
       </div>
       {modalOpen && <Mornitoring onClose={() => setModalOpen(false)} />}
