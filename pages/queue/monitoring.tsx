@@ -35,7 +35,7 @@ const Monitoring = () => {
 
   const connect = () => {
     client.current = new StompJs.Client({
-      brokerURL: "ws://192.168.10.55:8080/ws",
+      brokerURL: "ws://192.168.10.55:8082/ws",
       onConnect: () => {
         console.log("success");
         subscribe();
@@ -84,9 +84,9 @@ const Monitoring = () => {
     count: number
   ) => {
     e.preventDefault();
-    // console.log("topicName:", topicName);
-    // console.log("serial:", serial);
-    // console.log("count:", count);
+    console.log("topicName:", topicName);
+    console.log("serial:", serial);
+    console.log("count:", count);
     publish(topicName, serial, count);
   };
 
@@ -99,12 +99,6 @@ const Monitoring = () => {
   const handleClose = () => {
     setOpen(false);
   };
-
-  // const handleStart = () => {
-  //   const topicName = "topic";
-  //   const count = 4;
-  //   publish(topicName, serial, count);
-  // };
 
   const handleStop = () => {
     // 중지 버튼 동작 추가
@@ -164,16 +158,6 @@ const Monitoring = () => {
                 />
               </Grid>
             </Grid>
-            <Box sx={{ maxHeight: 200, overflow: "auto", marginTop: "16px" }}>
-              {list.map((item, index) => (
-                <div key={index}>{item}</div>
-              ))}
-            </Box>
-            <Box sx={{ maxHeight: 200, overflow: "auto", marginTop: "16px" }}>
-              {serialList.map((message, index) => (
-                <div key={index}>{message.body}</div>
-              ))}
-            </Box>
             <Grid container spacing={2}></Grid>
             <Grid container justifyContent="center" mt={2} spacing={2}>
               <Grid item>
