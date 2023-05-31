@@ -1,10 +1,10 @@
 import React from "react";
-import { Button, Modal, TextField, Box, styled } from "@mui/material";
+import { Button, Modal, TextField, Box, styled, Grid } from "@mui/material";
 import { useRef, useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
 import * as StompJs from "@stomp/stompjs";
+import { v4 as uuidv4 } from "uuid";
 
-interface serialMessage {
+interface SerialMessage {
   body: string;
 }
 
@@ -22,22 +22,20 @@ const ModalWrapper = styled("div")`
   flex-direction: column;
   align-items: center;
 `;
-
-const Mornitoring = ({ onClose }: { onClose: () => void }) => {
+const uuid = uuidv4();
+const Monitoring = () => {
   const [open, setOpen] = useState(true);
-  const [input1, setInput1] = useState("");
-  const [input2, setInput2] = useState("");
-  const [input3, setInput3] = useState("");
-  const [input4, setInput4] = useState("");
+  const [topicName, setTopicName] = useState("");
+  const [count, setCount] = useState("");
   const [list, setList] = useState<string[]>([]);
-  const [serialList, setSerialList] = useState<serialMessage[]>([]);
+  const [serialList, setSerialList] = useState<SerialMessage[]>([]);
   const [serial, setSerial] = useState("");
 
   const client = useRef<StompJs.Client | null>(null);
 
   const connect = () => {
     client.current = new StompJs.Client({
-      brokerURL: "ws://192.168.10.183:8080/ws",
+      brokerURL: "ws://192.168.10.55:8080/ws",
       onConnect: () => {
         console.log("success");
         subscribe();
@@ -46,25 +44,31 @@ const Mornitoring = ({ onClose }: { onClose: () => void }) => {
     client.current.activate();
   };
 
-  const publish = (serial: string, topicName: string, count: number) => {
+  const publish = (topicName: string, serial: string, count: number) => {
     if (!client.current?.connected) return;
+
+    const data = {
+      topicName: topicName,
+      serial: uuid,
+      count: count,
+    };
+
+    console.log("Publishing data:", data);
 
     client.current.publish({
       destination: "/pub/sendMessage",
-      body: JSON.stringify({
-        topicName: topicName,
-        serial: serial,
-        count: count,
-      }),
+      body: JSON.stringify(data),
     });
+
     setSerial("");
   };
 
   const subscribe = () => {
-    client.current?.subscribe("/sub/", (body) => {
-      const json_body = JSON.parse(body.body);
-      console.log(json_body);
-      setSerialList((_serial_list) => [..._serial_list, json_body]);
+    console.log(uuid);
+    // const subscribeTopic = "/sub/" + serial;
+    // console.log(subscribeTopic);
+    client.current?.subscribe("/sub/" + uuid, (body) => {
+      console.log(body.body);
     });
   };
 
@@ -73,17 +77,16 @@ const Mornitoring = ({ onClose }: { onClose: () => void }) => {
     console.log("error");
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSerial(e.target.value);
-  };
-
   const handleSubmit = (
     e: React.FormEvent,
-    serial: string,
     topicName: string,
+    serial: string,
     count: number
   ) => {
     e.preventDefault();
+    // console.log("topicName:", topicName);
+    // console.log("serial:", serial);
+    // console.log("count:", count);
     publish(topicName, serial, count);
   };
 
@@ -95,105 +98,104 @@ const Mornitoring = ({ onClose }: { onClose: () => void }) => {
 
   const handleClose = () => {
     setOpen(false);
-    onClose();
   };
 
-  const handleStart = () => {
-    // 시작 버튼 동작 추가
-    const topicName = "topic";
-    const count = 4; // 예시로 input1 값을 사용
-    publish(serial, topicName, count);
-  };
+  // const handleStart = () => {
+  //   const topicName = "topic";
+  //   const count = 4;
+  //   publish(topicName, serial, count);
+  // };
 
   const handleStop = () => {
     // 중지 버튼 동작 추가
   };
 
-  const handleInput1Change = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setInput1(event.target.value);
+  const handleTopicNameChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setTopicName(event.target.value);
   };
 
-  const handleInput2Change = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setInput2(event.target.value);
+  const handleSerialChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSerial(event.target.value);
   };
 
-  const handleInput3Change = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setInput3(event.target.value);
-  };
-
-  const handleInput4Change = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setInput4(event.target.value);
+  const handleCountChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setCount(event.target.value);
   };
 
   return (
     <Modal open={open} onClose={handleClose}>
-      <ModalWrapper>
+      <div>
         <div>
-          <div className="flex gap-4 mb-4">
-            <TextField
-              label="Input 1"
-              value={input1}
-              onChange={handleInput1Change}
-            />
-            <TextField
-              label="Input 2"
-              value={input2}
-              onChange={handleInput2Change}
-            />
-          </div>
-          <div className="flex gap-4">
-            <TextField
-              label="Input 3"
-              value={input3}
-              onChange={handleInput3Change}
-            />
-            <TextField
-              label="Input 4"
-              value={input4}
-              onChange={handleInput4Change}
-            />
-          </div>
-        </div>
-
-        <Box sx={{ maxHeight: 200, overflow: "auto", marginTop: "16px" }}>
-          {/* 리스트 표시 영역 */}
-          {list.map((item, index) => (
-            <div key={index}>{item}</div>
-          ))}
-        </Box>
-        <div className="serial-list">
           {serialList.map((message, index) => (
             <div key={index}>{message.body}</div>
           ))}
         </div>
-        <form onSubmit={(event) => handleSubmit(event, "abc", "topic", 4)}>
-          <div style={{ marginTop: "16px" }}>
-            <input
-              type="text"
-              name="serialInput"
-              onChange={handleChange}
-              value={serial}
-            />
-            <button type="submit" value="의견 보내기">
-              제출
-            </button>
-            {/* <Button
-            value={serial}
-            variant="contained"
-            // onClick={handleStart}
-            sx={{ marginRight: "8px" }}
-            onSubmit={(event) => handleSubmit(event, "abc", "topic", 4)}
-          >
-            시작
-          </Button> */}
-            <Button variant="contained" onClick={handleStop}>
-              중지
-            </Button>
-          </div>
+        <form
+          onSubmit={(event) =>
+            handleSubmit(event, topicName, serial, parseInt(count))
+          }
+        >
+          <ModalWrapper>
+            <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <TextField
+                  label="Topic Name"
+                  value={topicName}
+                  onChange={handleTopicNameChange}
+                  fullWidth
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  label="Serial"
+                  value={serial}
+                  onChange={handleSerialChange}
+                  fullWidth
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  label="Count"
+                  value={count}
+                  onChange={handleCountChange}
+                  fullWidth
+                />
+              </Grid>
+            </Grid>
+            <Box sx={{ maxHeight: 200, overflow: "auto", marginTop: "16px" }}>
+              {list.map((item, index) => (
+                <div key={index}>{item}</div>
+              ))}
+            </Box>
+            <Box sx={{ maxHeight: 200, overflow: "auto", marginTop: "16px" }}>
+              {serialList.map((message, index) => (
+                <div key={index}>{message.body}</div>
+              ))}
+            </Box>
+            <Grid container spacing={2}></Grid>
+            <Grid container justifyContent="center" mt={2} spacing={2}>
+              <Grid item>
+                <Button type="submit" variant="outlined" color="success">
+                  제출
+                </Button>
+              </Grid>
+              <Grid item>
+                <Button
+                  variant="contained"
+                  color="success"
+                  onClick={handleStop}
+                >
+                  중지
+                </Button>
+              </Grid>
+            </Grid>
+          </ModalWrapper>
         </form>
-      </ModalWrapper>
+      </div>
     </Modal>
   );
 };
 
-export default Mornitoring;
+export default Monitoring;
