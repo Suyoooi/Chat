@@ -30,13 +30,19 @@ const Monitoring = () => {
   const [serialList, setSerialList] = useState<SerialMessage[]>([]);
   const [serial, setSerial] = useState("");
 
+  // const sessionID = session.getId();
+
   const client = useRef<StompJs.Client | null>(null);
 
   const connect = () => {
     client.current = new StompJs.Client({
-      brokerURL: "ws://192.168.10.55:8082/ws",
+      brokerURL: "ws://192.168.10.55:8080/ws",
       onConnect: () => {
         console.log("success");
+        // console.log(client.current);
+        // console.log(StompJs.StompHeaders);
+        // console.log(StompJs);
+
         subscribe();
       },
     });
@@ -63,8 +69,8 @@ const Monitoring = () => {
     // subscribe();
   };
 
+  //serial을 unique한 값으로 받는 이유는,
   const subscribe = () => {
-    // console.log(uuid);
     console.log(topicName);
     const subscribeTopic = "/sub/" + uuid;
     console.log(subscribeTopic);
@@ -99,11 +105,13 @@ const Monitoring = () => {
   }, []);
 
   const handleClose = () => {
+    disconnect();
     setOpen(false);
   };
 
   const handleStop = () => {
-    // 중지 버튼 동작 추가
+    disconnect();
+    console.log("disconnection");
   };
 
   const handleTopicNameChange = (
